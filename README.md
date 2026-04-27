@@ -1,35 +1,27 @@
 # mineru-md
 
-`mineru-md` is a Codex skill for converting PDF and HTML files or URLs into high-quality Markdown with image assets through the MinerU v4 Precision Extract API.
+中文 | [English](README.en.md) | [AI Manual](ai_manual.md)
 
-`mineru-md` 是一个面向 Codex 的 Skill，用于通过 MinerU v4 精准解析 API 将 PDF、HTML 文件或 URL 转换为高质量 Markdown，并保留图片等结构化资产。
+`mineru-md` 是一个 Codex Skill，用于让 Agent 在阅读、总结、抽取 PDF/HTML 文档前，先通过 MinerU v4 精准解析 API 将文件或 URL 转换为高质量 Markdown，并保留图片等结构化资产。
 
-> This project is a community skill wrapper around the MinerU API. You need your own MinerU API token. Do not commit real tokens to this repository.
->
-> 本项目是围绕 MinerU API 的社区 Skill 封装。你需要自行准备 MinerU API Token。不要把真实 Token 提交到仓库中。
+这个仓库面向“想安装并使用 Skill 的人”。如果你只是希望 Agent 帮你读 PDF 或 HTML，通常不需要了解内部脚本怎么运行，只需要完成安装、Token 配置，并在对话中明确让 Agent 使用 `$mineru-md`。
 
-## 中文说明
+## 适合谁使用
 
-### 功能特性
+- 想让 Codex/Agent 读取 PDF、HTML、网页导出的技术文档、论文、合同、报告。
+- 希望 Agent 在回答前先转换文档，减少直接读取 PDF/HTML 时的信息丢失。
+- 需要保留图片、扫描页、图表、表格、公式等结构化内容，方便 Agent 结合 Markdown 和图片资产分析。
+- 希望把一个可复用的文档解析能力部署到自己的 Codex skills 目录中。
 
-- 支持本地 `.pdf`、`.html`、`.htm` 文件转换为 Markdown。
-- 支持远程 PDF/HTML URL 转换为 Markdown。
-- 支持目录批处理、递归扫描、并发处理和断点续跑。
-- PDF 默认使用 MinerU `vlm` 模型，必要时可切换到 `pipeline` 以提升速度。
-- HTML 自动使用 `MinerU-HTML` 模型。
-- 支持 OCR、语言提示、页码范围、公式解析和表格解析开关。
-- 每个输入生成独立输出目录，并写入 `manifest.json`，便于确认状态和定位 Markdown 文件。
-- 下载并安全解压 MinerU 结果包，防止 ZIP 路径穿越。
-- 保留 MinerU 输出中的图片、布局、JSON、HTML 等辅助文件，便于进一步核查视觉内容。
+## 功能概览
 
-### 适用场景
+- 支持 PDF、HTML、本地文件和远程 URL。
+- 使用 MinerU v4 Precision Extract API，PDF 默认使用高质量 `vlm` 模型。
+- 转换结果包含 Markdown、图片和相关结构化文件。
+- 支持批量输入、断点续跑和转换状态记录。
+- Skill 已封装调用流程，Agent 可按需自动运行转换并读取结果。
 
-- 在回答 PDF/HTML 文档问题前，先把原文转换为 Markdown。
-- 解析论文、报告、合同、产品文档、API 文档中的正文、标题、表格、公式和图片说明。
-- 批量转换一个目录中的 PDF/HTML 文件。
-- 对扫描页、图表、流程图、复杂表格等视觉信息进行二次检查。
-
-### 仓库结构
+## 仓库结构
 
 ```text
 .
@@ -44,12 +36,29 @@
 |-- tests/
 |   `-- test_mineru_md.py
 |-- README.md
+|-- README.en.md
+|-- ai_manual.md
 |-- LICENSE
 |-- requirements.txt
 `-- .gitignore
 ```
 
-### 安装
+日常安装时，只需要把 `mineru-md/` 这个 Skill 文件夹部署到 Codex skills 目录；仓库里的测试和文档用于维护与验证。
+
+## 安装要求
+
+- Python 3.10 或更高版本。
+- 可以访问 MinerU API 的网络环境。
+- 一个有效的 MinerU API Token。
+- 支持本地 Skill 的 Codex/Agent 环境。
+
+安装 Python 依赖：
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+## 安装到 Codex skills 目录
 
 1. 克隆仓库：
 
@@ -58,51 +67,60 @@ git clone https://github.com/zhangyu-ch/mineru-md.git
 cd mineru-md
 ```
 
-2. 安装 Python 依赖：
+2. 复制 Skill 文件夹。
 
-```bash
-python -m pip install -r requirements.txt
-```
-
-3. 将 `mineru-md/` 文件夹放到你的 Codex skills 目录中，或在支持本地 skill 的工作区中直接引用该文件夹。
-
-常见位置示例：
-
-```text
-~/.codex/skills/mineru-md
-```
-
-Windows PowerShell 示例：
+Windows PowerShell：
 
 ```powershell
 New-Item -ItemType Directory -Force "$env:USERPROFILE\.codex\skills" | Out-Null
 Copy-Item -Recurse -Force ".\mineru-md" "$env:USERPROFILE\.codex\skills\mineru-md"
 ```
 
-### Token 配置
-
-转换脚本需要 MinerU API Token。脚本按以下优先级读取凭据：
-
-1. 命令行参数：`--token`
-2. 环境变量：`MINERU_TOKEN`
-3. 环境变量：`MINERU_API_TOKEN`
-4. 文件：`~/.config/mineru/token`
-
-推荐使用环境变量或本地 token 文件，不推荐把 token 写入命令历史或提交到仓库。
-
-Linux/macOS:
+Linux/macOS：
 
 ```bash
-export MINERU_TOKEN="your-mineru-token"
+mkdir -p ~/.codex/skills
+cp -R ./mineru-md ~/.codex/skills/mineru-md
 ```
 
-Windows PowerShell:
+3. 确认部署后的文件存在：
+
+```text
+~/.codex/skills/mineru-md/SKILL.md
+~/.codex/skills/mineru-md/scripts/mineru_md.py
+~/.codex/skills/mineru-md/references/mineru-api.md
+```
+
+如果你的 Codex 环境使用不同的 skills 目录，请把 `mineru-md/` 放到该环境实际读取的 skills 路径下。
+
+## 配置 MinerU Token
+
+`mineru-md` 需要 MinerU API Token。推荐使用环境变量或本地 token 文件，不要把真实 Token 写入 Git 仓库、README、对话记录或共享脚本。
+
+Skill 会按以下顺序读取凭据：
+
+1. `--token`
+2. `MINERU_TOKEN`
+3. `MINERU_API_TOKEN`
+4. `~/.config/mineru/token`
+
+推荐方式一：环境变量。
+
+Windows PowerShell：
 
 ```powershell
 $env:MINERU_TOKEN = "your-mineru-token"
 ```
 
-本地 token 文件：
+Linux/macOS：
+
+```bash
+export MINERU_TOKEN="your-mineru-token"
+```
+
+推荐方式二：本地 token 文件。
+
+Linux/macOS：
 
 ```bash
 mkdir -p ~/.config/mineru
@@ -110,432 +128,104 @@ printf '%s\n' 'your-mineru-token' > ~/.config/mineru/token
 chmod 600 ~/.config/mineru/token
 ```
 
-### 使用方法
+Windows PowerShell：
 
-转换单个 PDF：
-
-```bash
-python mineru-md/scripts/mineru_md.py --file ./paper.pdf --output ./mineru-output --resume
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.config\mineru" | Out-Null
+Set-Content -Path "$env:USERPROFILE\.config\mineru\token" -Value "your-mineru-token"
 ```
 
-转换单个 HTML：
+## 如何让 Agent 调用
 
-```bash
-python mineru-md/scripts/mineru_md.py --file ./page.html --output ./mineru-output --resume
-```
-
-转换远程 URL：
-
-```bash
-python mineru-md/scripts/mineru_md.py --url https://example.com/paper.pdf --output ./mineru-output
-```
-
-批量转换目录：
-
-```bash
-python mineru-md/scripts/mineru_md.py --dir ./docs --recursive --workers 3 --resume
-```
-
-从 URL 列表批量转换：
-
-```bash
-python mineru-md/scripts/mineru_md.py --urls-file ./urls.txt --output ./mineru-output --workers 3
-```
-
-只解析 PDF 的部分页码：
-
-```bash
-python mineru-md/scripts/mineru_md.py --file ./paper.pdf --pages "1-5,8" --output ./mineru-output
-```
-
-开启 OCR 并指定中文：
-
-```bash
-python mineru-md/scripts/mineru_md.py --file ./scan.pdf --ocr --language ch --output ./mineru-output
-```
-
-切换 PDF 模型为 `pipeline`：
-
-```bash
-python mineru-md/scripts/mineru_md.py --file ./paper.pdf --model pipeline --output ./mineru-output
-```
-
-### 输出说明
-
-每个输入会生成一个独立目录：
+安装并配置 Token 后，在对话中直接说明要使用 `$mineru-md` 处理 PDF 或 HTML。示例：
 
 ```text
-mineru-output/
-`-- paper/
-    |-- manifest.json
-    |-- paper.md
-    |-- images/
-    |-- layout.json
-    `-- other-mineru-assets
+请使用 $mineru-md 读取这个 PDF，提炼摘要、关键结论和表格数据。
 ```
 
-读取转换结果时，应先打开 `manifest.json`：
-
-```json
-{
-  "source": "...",
-  "source_kind": "file",
-  "name": "paper.pdf",
-  "model": "vlm",
-  "status": "done",
-  "markdown_path": "/absolute/path/to/mineru-output/paper/paper.md",
-  "error": null
-}
+```text
+请先用 $mineru-md 把这个 HTML 文档转换为 Markdown，再帮我整理接口说明。
 ```
 
-只有当 `status` 为 `done` 时，才应继续读取 `markdown_path` 指向的 Markdown 文件。若用户问题依赖图片、扫描页、图表、流程图或复杂表格，应同时检查输出目录中的图片和相关资产，不要只依赖 Markdown 文本。
-
-### CLI 参数
-
-输入来源，四选一：
-
-- `--file`：单个本地 `.pdf`、`.html` 或 `.htm` 文件。
-- `--dir`：包含 PDF/HTML 文件的目录。
-- `--url`：单个远程 PDF/HTML URL。
-- `--urls-file`：每行一个 URL 的文本文件，空行和 `#` 注释行会被忽略。
-
-常用参数：
-
-- `--output`：输出目录，默认 `./mineru-output`。
-- `--workers`：并发处理数量，默认 `3`。
-- `--resume`：跳过已完成的输出。
-- `--recursive`：配合 `--dir` 递归扫描。
-- `--timeout`：单个任务等待秒数，默认 `1800`。
-- `--poll-interval`：轮询间隔秒数，默认 `5`。
-- `--model`：PDF 模型，可选 `vlm` 或 `pipeline`，默认 `vlm`。
-- `--ocr`：启用 PDF OCR。
-- `--language`：PDF 语言提示，默认 `auto`。
-- `--pages`：PDF 页码范围，例如 `"1-5,8"`。
-- `--no-formula`：关闭公式解析。
-- `--no-table`：关闭表格解析。
-- `--token`：直接传入 MinerU API Token。
-- `--keep-zip`：保留下载的 MinerU 结果 ZIP。
-
-查看完整帮助：
-
-```bash
-python mineru-md/scripts/mineru_md.py --help
+```text
+这个文件夹里有多份 PDF，请用 $mineru-md 批量解析，然后按主题归纳。
 ```
 
-### API 与限制
+Agent 正确使用时通常会：
 
-- API 基址：`https://mineru.net/api/v4`
-- 本地文件上传：`POST /file-urls/batch`
-- URL 抽取：`POST /extract/task`
-- 本地文件上传限制：单文件最大 200 MB。
-- 页数限制：单文件最大 200 页。
-- 批量请求限制：最多 50 个文件或 URL。
-- 认证方式：`Authorization: Bearer <token>`。
+- 找到你提供的 PDF/HTML 文件或 URL。
+- 调用 `mineru-md` Skill 完成转换。
+- 先检查转换结果状态。
+- 读取生成的 Markdown。
+- 当问题涉及图表、扫描页、流程图、视觉表格或图片细节时，同时检查输出图片资产。
 
-更多接口行为、请求字段和常见失败处理见 `mineru-md/references/mineru-api.md`。
+你不需要告诉 Agent 底层脚本参数，除非你是在排查部署问题，或你的运行环境不支持自动加载 Skill。
 
-### 错误处理建议
+## 适合的用户提示词
 
-- Token 无效或过期：刷新 MinerU Token 后重试。
-- 文件过大或页数过多：拆分文档后重试。
-- URL 下载超时：改用本地文件上传。
-- 任务超时：调大 `--timeout`，并配合 `--resume` 续跑。
-- ZIP 下载失败：脚本会重试，并在必要时尝试 MinerU CDN 的等价 OSS 域名。
+- “请使用 `$mineru-md` 阅读这篇论文，并输出中文摘要。”
+- “请先用 `$mineru-md` 解析这份 PDF 合同，再提取甲乙方、金额、期限和风险条款。”
+- “请用 `$mineru-md` 读取这个 HTML API 文档，生成接口清单。”
+- “这份报告里有图表，请用 `$mineru-md` 转换后同时检查图片资产，再回答问题。”
 
-### 安全注意事项
+## 输出结果如何被 Agent 使用
 
-- 不要提交真实 API Token、`.env`、本地凭据文件或转换输出目录。
-- `--token` 会出现在命令历史中，建议优先使用环境变量或 `~/.config/mineru/token`。
-- 转换结果可能包含原文档中的敏感信息，发布或分享前请单独审查 `mineru-output/`。
-- 脚本会校验 ZIP 成员路径，防止结果包解压到目标目录之外。
+转换结果一般会包含：
 
-### 测试
+- Markdown 主文件。
+- `manifest.json` 状态文件。
+- 图片、布局和其他 MinerU 资产。
+
+对人类用户来说，通常只需要确认 Agent 已成功完成转换并基于转换结果回答。对依赖视觉信息的问题，应提醒 Agent 不要只看 Markdown，还要检查图片资产。
+
+## 常见问题
+
+### Agent 说找不到 `$mineru-md`
+
+检查 `mineru-md/` 是否复制到了 Codex 实际读取的 skills 目录，并确认 `SKILL.md` 位于：
+
+```text
+~/.codex/skills/mineru-md/SKILL.md
+```
+
+如果你使用的是自定义 skills 路径，请以你的环境配置为准。
+
+### Agent 提示没有 MinerU Token
+
+配置 `MINERU_TOKEN`、`MINERU_API_TOKEN`，或创建 `~/.config/mineru/token`。完成后重新打开 Agent 会话，或确保新环境变量对当前 Agent 进程可见。
+
+### PDF 很大或页数很多
+
+MinerU API 对文件大小和页数有限制。请拆分文档，或让 Agent 只处理你关心的部分。
+
+### 解析结果缺少图表信息
+
+让 Agent 同时检查转换输出目录中的图片资产，并基于图片和 Markdown 一起回答。
+
+### 是否必须手动运行 Python 脚本
+
+正常使用 Skill 时不需要。底层脚本由 Agent 根据 `SKILL.md` 调用。只有在排查安装、Token、网络或非 Codex 环境集成时，才需要直接运行脚本。
+
+## 给 AI/Agent 的说明
+
+如果你希望把这个仓库交给另一个 AI 来部署或排障，请让它阅读 [ai_manual.md](ai_manual.md)。该文件说明了 Agent 应如何检查安装路径、依赖、Token、调用方式和常见失败场景。
+
+## 维护与测试
+
+开发或修改 Skill 时可以运行测试：
 
 ```bash
 python -m unittest discover -s tests
 ```
 
-当前测试覆盖：
+测试用于维护仓库质量；普通用户安装和调用 Skill 时通常不需要运行测试。
 
-- Token 读取优先级。
-- PDF/HTML 模型选择。
-- 支持语言参数解析。
-- 本地文件和 URL 请求载荷构造。
-- ZIP 安全解压。
-- Markdown 文件归一化与断点续跑判断。
-- 批量任务轮询成功、失败和超时场景。
+## 安全提醒
 
-### 贡献
+- 不要提交真实 MinerU Token。
+- 不要上传 `.env`、本地凭据文件、转换输出目录或包含隐私内容的解析结果。
+- 转换后的 Markdown 和图片资产可能包含原文档敏感信息，分享前请单独审查。
 
-欢迎提交 Issue 或 Pull Request。建议变更前后运行测试，并在 PR 中说明：
+## 许可证
 
-- 解决的问题或新增能力。
-- 行为变化和兼容性影响。
-- 验证方式。
-- 是否涉及 API 字段、输出结构或 Token 处理逻辑。
-
-## English
-
-### Features
-
-- Converts local `.pdf`, `.html`, and `.htm` files to Markdown.
-- Converts remote PDF/HTML URLs to Markdown.
-- Supports directory batch conversion, recursive scanning, concurrency, and resumable runs.
-- Uses MinerU `vlm` for PDF by default, with optional `pipeline` for faster PDF extraction.
-- Uses `MinerU-HTML` automatically for HTML inputs.
-- Supports OCR, language hints, page ranges, formula extraction, and table extraction switches.
-- Writes one output directory per input, including a `manifest.json` file for status and Markdown discovery.
-- Downloads and safely extracts MinerU result archives with ZIP path validation.
-- Preserves image, layout, JSON, HTML, and other MinerU assets for visual review.
-
-### Use Cases
-
-- Convert PDF/HTML documents to Markdown before answering questions about them.
-- Extract content from papers, reports, contracts, product docs, API docs, tables, formulas, and figures.
-- Batch-convert a directory of PDF/HTML documents.
-- Review visual content such as scanned pages, charts, diagrams, and complex tables alongside Markdown.
-
-### Repository Layout
-
-```text
-.
-|-- mineru-md/
-|   |-- SKILL.md
-|   |-- agents/
-|   |   `-- openai.yaml
-|   |-- references/
-|   |   `-- mineru-api.md
-|   `-- scripts/
-|       `-- mineru_md.py
-|-- tests/
-|   `-- test_mineru_md.py
-|-- README.md
-|-- LICENSE
-|-- requirements.txt
-`-- .gitignore
-```
-
-### Installation
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/zhangyu-ch/mineru-md.git
-cd mineru-md
-```
-
-2. Install Python dependencies:
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-3. Place the `mineru-md/` folder in your Codex skills directory, or reference it directly from a workspace that supports local skills.
-
-Typical location:
-
-```text
-~/.codex/skills/mineru-md
-```
-
-Windows PowerShell example:
-
-```powershell
-New-Item -ItemType Directory -Force "$env:USERPROFILE\.codex\skills" | Out-Null
-Copy-Item -Recurse -Force ".\mineru-md" "$env:USERPROFILE\.codex\skills\mineru-md"
-```
-
-### Token Configuration
-
-The converter requires a MinerU API token. Credentials are resolved in this order:
-
-1. CLI argument: `--token`
-2. Environment variable: `MINERU_TOKEN`
-3. Environment variable: `MINERU_API_TOKEN`
-4. File: `~/.config/mineru/token`
-
-Environment variables or a local token file are recommended. Avoid storing tokens in shell history or committing them to git.
-
-Linux/macOS:
-
-```bash
-export MINERU_TOKEN="your-mineru-token"
-```
-
-Windows PowerShell:
-
-```powershell
-$env:MINERU_TOKEN = "your-mineru-token"
-```
-
-Local token file:
-
-```bash
-mkdir -p ~/.config/mineru
-printf '%s\n' 'your-mineru-token' > ~/.config/mineru/token
-chmod 600 ~/.config/mineru/token
-```
-
-### Usage
-
-Convert one PDF:
-
-```bash
-python mineru-md/scripts/mineru_md.py --file ./paper.pdf --output ./mineru-output --resume
-```
-
-Convert one HTML file:
-
-```bash
-python mineru-md/scripts/mineru_md.py --file ./page.html --output ./mineru-output --resume
-```
-
-Convert a remote URL:
-
-```bash
-python mineru-md/scripts/mineru_md.py --url https://example.com/paper.pdf --output ./mineru-output
-```
-
-Batch-convert a directory:
-
-```bash
-python mineru-md/scripts/mineru_md.py --dir ./docs --recursive --workers 3 --resume
-```
-
-Batch-convert from a URL list:
-
-```bash
-python mineru-md/scripts/mineru_md.py --urls-file ./urls.txt --output ./mineru-output --workers 3
-```
-
-Convert selected PDF pages only:
-
-```bash
-python mineru-md/scripts/mineru_md.py --file ./paper.pdf --pages "1-5,8" --output ./mineru-output
-```
-
-Enable OCR with a Chinese language hint:
-
-```bash
-python mineru-md/scripts/mineru_md.py --file ./scan.pdf --ocr --language ch --output ./mineru-output
-```
-
-Use the faster PDF `pipeline` model:
-
-```bash
-python mineru-md/scripts/mineru_md.py --file ./paper.pdf --model pipeline --output ./mineru-output
-```
-
-### Output
-
-Each input gets its own output directory:
-
-```text
-mineru-output/
-`-- paper/
-    |-- manifest.json
-    |-- paper.md
-    |-- images/
-    |-- layout.json
-    `-- other-mineru-assets
-```
-
-Always inspect `manifest.json` first:
-
-```json
-{
-  "source": "...",
-  "source_kind": "file",
-  "name": "paper.pdf",
-  "model": "vlm",
-  "status": "done",
-  "markdown_path": "/absolute/path/to/mineru-output/paper/paper.md",
-  "error": null
-}
-```
-
-Only read the Markdown file when `status` is `done`. If the task depends on images, scanned pages, charts, diagrams, or complex visual tables, inspect the extracted image assets as well. Do not rely on Markdown alone for visual questions.
-
-### CLI Options
-
-Input source, choose exactly one:
-
-- `--file`: one local `.pdf`, `.html`, or `.htm` file.
-- `--dir`: a directory containing PDF/HTML files.
-- `--url`: one remote PDF/HTML URL.
-- `--urls-file`: a text file with one URL per line. Blank lines and `#` comments are ignored.
-
-Common options:
-
-- `--output`: output directory, default `./mineru-output`.
-- `--workers`: number of concurrent sources, default `3`.
-- `--resume`: skip completed outputs.
-- `--recursive`: recursively scan `--dir`.
-- `--timeout`: seconds to wait per source, default `1800`.
-- `--poll-interval`: polling interval in seconds, default `5`.
-- `--model`: PDF model, `vlm` or `pipeline`, default `vlm`.
-- `--ocr`: enable OCR for PDF.
-- `--language`: PDF language hint, default `auto`.
-- `--pages`: PDF page ranges, for example `"1-5,8"`.
-- `--no-formula`: disable formula extraction.
-- `--no-table`: disable table extraction.
-- `--token`: pass a MinerU API token directly.
-- `--keep-zip`: keep the downloaded MinerU result ZIP.
-
-Full help:
-
-```bash
-python mineru-md/scripts/mineru_md.py --help
-```
-
-### API and Limits
-
-- API base: `https://mineru.net/api/v4`
-- Local file upload: `POST /file-urls/batch`
-- URL extraction: `POST /extract/task`
-- Local file size limit: 200 MB per file.
-- Page limit: 200 pages per file.
-- Batch request limit: 50 files or URLs.
-- Authentication: `Authorization: Bearer <token>`.
-
-See `mineru-md/references/mineru-api.md` for request fields, API behavior, and common failure handling.
-
-### Error Handling
-
-- Invalid or expired token: refresh the MinerU token and retry.
-- File too large or too many pages: split the document and retry.
-- URL fetch timeout: use a local file upload instead.
-- Task timeout: increase `--timeout` and rerun with `--resume`.
-- ZIP download failure: the script retries and may switch from the MinerU CDN host to the equivalent OSS host.
-
-### Security Notes
-
-- Do not commit real API tokens, `.env` files, local credential files, or conversion outputs.
-- `--token` can appear in shell history. Prefer environment variables or `~/.config/mineru/token`.
-- Converted output may contain sensitive source document content. Review `mineru-output/` before sharing it.
-- ZIP member paths are validated before extraction to prevent writing outside the output directory.
-
-### Testing
-
-```bash
-python -m unittest discover -s tests
-```
-
-The current tests cover:
-
-- Token resolution priority.
-- PDF/HTML model selection.
-- Documented language argument parsing.
-- Local file and URL payload construction.
-- Safe ZIP extraction.
-- Markdown file normalization and resumable run detection.
-- Batch polling success, failure, and timeout cases.
-
-### Contributing
-
-Issues and pull requests are welcome. Before submitting a change, run the tests and describe:
-
-- The problem fixed or capability added.
-- Behavior changes and compatibility impact.
-- Validation performed.
-- Whether the change affects API fields, output structure, or token handling.
+MIT License. See [LICENSE](LICENSE).
