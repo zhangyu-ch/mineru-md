@@ -1,0 +1,4 @@
+interface:
+  display_name: "MinerU Markdown"
+  short_description: "Convert PDF and HTML to Markdown with MinerU"
+  default_prompt: "Use $mineru-md to convert this PDF or HTML file to Markdown."
