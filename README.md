@@ -97,6 +97,8 @@ cp -R ./mineru-md ~/.codex/skills/mineru-md
 
 `mineru-md` 需要 MinerU API Token。推荐使用环境变量或本地 token 文件，不要把真实 Token 写入 Git 仓库、README、对话记录或共享脚本。
 
+Token 获取地址：[https://mineru.net/apiManage/token](https://mineru.net/apiManage/token)
+
 Skill 会按以下顺序读取凭据：
 
 1. `--token`

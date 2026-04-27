@@ -97,6 +97,8 @@ If your Codex environment uses a different skills directory, place `mineru-md/` 
 
 `mineru-md` requires a MinerU API token. Use an environment variable or a local token file. Do not commit real tokens to git, README files, chat logs, or shared scripts.
 
+Get a MinerU token here: [https://mineru.net/apiManage/token](https://mineru.net/apiManage/token)
+
 The skill resolves credentials in this order:
 
 1. `--token`

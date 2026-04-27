@@ -62,6 +62,8 @@ references/mineru-api.md
 
 The skill requires a MinerU API token. It resolves credentials in this order:
 
+Token management URL: [https://mineru.net/apiManage/token](https://mineru.net/apiManage/token)
+
 1. `--token`
 2. `MINERU_TOKEN`
 3. `MINERU_API_TOKEN`
